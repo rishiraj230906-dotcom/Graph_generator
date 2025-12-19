@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 30px 15px;
+      background: linear-gradient(135deg, #47116e, #0d9bf3);
+      color: #0f172a;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #e0f2ff;
+      text-shadow:
+        1px 1px 0 #2b0a44,
+        2px 2px 0 #2b0a44,
+        3px 3px 0 #1f0733,
+        4px 4px 0 #140521,
+        8px 12px 25px rgba(0, 0, 0, 0.45);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 25px 60px rgba(19, 19, 19, 0.671);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: block;
+      color: #020617;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #c7d2fe;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    .note {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 6px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    button {
+      grid-column: 1 / -1;
+      margin-top: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      color: #ffffff;
+      cursor: pointer;
+      transition: 0.25s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .chart-card {
+      margin-top: 35px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 18px;
+      box-shadow: inset 0 0 0 1px #e5e7eb;
+    }
+
+    canvas {
+      max-height: 420px;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Interactive Graph Generator</h1>
+
+  <div class="container">
+    <div class="form-grid">
+      <div>
+        <label>Graph Type</label>
+        <select id="chartType">
+          <option value="bar">Bar Graph</option>
+          <option value="line">Line Graph</option>
+          <option value="pie">Pie Chart</option>
+          <option value="groupedBar">Joint / Grouped Bar Graph</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Labels</label>
+        <input id="labels" placeholder="Jan, Feb, Mar" />
+      </div>
+
+      <div>
+        <label>Values</label>
+        <input id="values" placeholder="10, 20, 30" />
+        <div class="note">Grouped bar: 10|20, 15|25</div>
+      </div>
+
+      <div>
+        <label>Dataset Names</label>
+        <input id="datasetNames" placeholder="Sales 2023, Sales 2024" />
+        <div class="note">Only required for grouped bar</div>
+      </div>
+
+      <button onclick="generateChart()">Generate Graph</button>
+    </div>
+
+    <div class="chart-card">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let chart;
+
+    function generateChart() {
+      const type = document.getElementById('chartType').value;
+      const labels = document.getElementById('labels').value.split(',').map(l => l.trim());
+      const rawValues = document.getElementById('values').value;
+      const datasetNames = document.getElementById('datasetNames').value.split(',').map(d => d.trim());
+
+      const ctx = document.getElementById('myChart');
+      if (chart) chart.destroy();
+
+      if (type === 'groupedBar') {
+        const rows = rawValues.split(',');
+        const datasets = [];
+
+        rows.forEach((row, rowIndex) => {
+          row.split('|').map(Number).forEach((val, i) => {
+            if (!datasets[i]) {
+              datasets[i] = { label: datasetNames[i] || `Dataset ${i + 1}`, data: [] };
+            }
+            datasets[i].data[rowIndex] = val;
+          });
+        });
+
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets },
+          options: { responsive: true }
+        });
+      } else {
+        chart = new Chart(ctx, {
+          type,
+          data: {
+            labels,
+            datasets: [{ label: 'Dataset', data: rawValues.split(',').map(Number) }]
+          },
+          options: { responsive: true }
+        });
+      }
+    }
+  </script>
+</body>
+
+</html>
